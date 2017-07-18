@@ -232,7 +232,7 @@ struct ngx_module_s {
     ngx_uint_t            version;
     const char           *signature;
 
-    void                 *ctx;//上下文结构体
+    void                 *ctx;//上下文结构体，每个模块将具体化ctx上下文
     ngx_command_t        *commands;//commands将处理nginx.conf的配置项
     ngx_uint_t            type;//模块的类型，NGX_HTTP_MODULE NGX_CORE_MODULE NGX_CONF_MODULE NGX_EVENT_MODULE NGX_MAIL_MODULE
 
@@ -258,10 +258,11 @@ struct ngx_module_s {
 };
 
 
+//核心模块
 typedef struct {
     ngx_str_t             name;
     void               *(*create_conf)(ngx_cycle_t *cycle);
-    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);
+    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);//解析配置项完成后
 } ngx_core_module_t;
 
 
