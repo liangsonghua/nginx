@@ -949,9 +949,9 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 return;
             }
         }
-
+        //检查header_in缓冲区
         rc = ngx_http_parse_request_line(r, r->header_in);
-
+        //解析到完整的请求行
         if (rc == NGX_OK) {
 
             /* the request line has been parsed successfully */
@@ -999,9 +999,10 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
                 r->headers_in.server = host;
             }
-
+            //用户请求的http版本较小
             if (r->http_version < NGX_HTTP_VERSION_10) {
 
+                //ngx_http_set_virtual_server检索出虚拟主机
                 if (r->headers_in.server.len == 0
                     && ngx_http_set_virtual_server(r, &r->headers_in.server)
                        == NGX_ERROR)
@@ -1013,7 +1014,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 return;
             }
 
-
+            //初始化r->headers_in
             if (ngx_list_init(&r->headers_in.headers, r->pool, 20,
                               sizeof(ngx_table_elt_t))
                 != NGX_OK)
@@ -1041,7 +1042,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
         }
 
         /* NGX_AGAIN: a request line parsing is still incomplete */
-
+        //目前接收到字符流不足以构成完成的请求行，还需要接收更多的字符流
         if (r->header_in->pos == r->header_in->end) {
 
             rv = ngx_http_alloc_large_header_buffer(r, 1);
@@ -1217,6 +1218,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         if (rc == NGX_AGAIN) {
 
+            //header_in缓冲区已用尽
             if (r->header_in->pos == r->header_in->end) {
 
                 rv = ngx_http_alloc_large_header_buffer(r, 0);
@@ -1267,7 +1269,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         rc = ngx_http_parse_header_line(r, r->header_in,
                                         cscf->underscores_in_headers);
-
+        //解析出一行头部
         if (rc == NGX_OK) {
 
             r->request_length += r->header_in->pos - r->header_name_start;
@@ -1327,7 +1329,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
             continue;
         }
-
+        //解析完整的头部
         if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
 
             /* a whole header has been parsed successfully */
@@ -1344,7 +1346,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             if (rc != NGX_OK) {
                 return;
             }
-
+            //处理http请求
             ngx_http_process_request(r);
 
             return;
@@ -1902,7 +1904,7 @@ ngx_http_process_request(ngx_http_request_t *r)
     }
 
 #endif
-
+    //不再存在接收HTTP请求头部超时的问题
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
@@ -1916,7 +1918,7 @@ ngx_http_process_request(ngx_http_request_t *r)
 
     c->read->handler = ngx_http_request_handler;
     c->write->handler = ngx_http_request_handler;
-    r->read_event_handler = ngx_http_block_reading;
+    r->read_event_handler = ngx_http_block_reading;//阻塞读事件
 
     ngx_http_handler(r);
 
